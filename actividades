@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Meeting Room Calendar App</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="Present room booking and meeting information connecting this App to your favorite room calendar such as Google Calendar, Outlook 365, or any other iCal compatible calendaring service.">
+  <meta name="viewport" content="width=device-width, target-densitydpi=device-dpi, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <meta type="text" name="title" label="Calendar/Room name">
+  <meta type="url" name="icalFile" label="Enter the web address of your iCal file" help="Go to your Google Calendar and click on the arrow on the right of the selected calendar &#9656 Click on “Calendar Settings”. &#9656 Click on “ICAL” green button beside the title “Private Address” &#9656 Enter here the URL address provided on the pop-up window">
+  <meta type="number" name="update" label="Calendar sync frequency" value="10" min="1" help="Frequency in minutes the app will look for calendar updates.">
+  
+
+  <meta type="number" name="timeout" label="Calendar timeout" value="50" min="1" max="311040" help="Time in minutes the App will consider the calendar offline.">
+
+  
+
+  <meta type="text" name="offline" label="Offline message" help="Message presented in case the calendar is offline.">
+  <meta type="choice" name="lang" value="en" label="Language: English">
+  <meta type="choice" name="lang" value="pt-br" label="Language: Brazilian Portuguese">
+  <meta type="choice" name="lang" value="es" label="Language: Spanish">
+
+  <meta type="choice" name="format" value="ampm" label="Time and Date format: AM/PM MM/DD/YY">
+  <meta type="choice" name="format" value="24h" label="Time and Date format: 24H DD/MM/YY">
+
+  <meta type="font" name="font_family" label="Text font" help="Change the font used to show the text." optional>
+  <meta type="bool" name="text_shadow" label="Text shadow" value="true">
+  <meta type="color" name="background" label="Background color" optional>
+  <meta type="color" name="textColor" label="Text color" optional>
+  <meta type="image" name="background_image" label="Background Image" optional>
+  <meta type="bool" name="entrance" label="Entrance animation" value="true">
+  <meta type="bool" name="article_animation" label="Animate background image" value="false">
+
+  
+
+  <style type="text/css" media="screen">
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      border-left: 10px solid "gray";
+      border-right: 10px solid "gray";
+      
+        color: #ffffff;
+
+      
+
+      
+        font-family: sans-serif;
+      
+
+      overflow: hidden;
+      box-sizing: border-box;
+
+      
+    }
+
+    body:before {
+      top: 0;
+    }
+
+    body:before, body:after{
+      content: "";
+      position: fixed;
+      background: "gray";
+      left: 0;
+      right: 0;
+      height: 10px;
+      z-index: 1;
+    }
+
+   .free:before, .free:after{
+      content: "";
+      position: fixed;
+      background: #00d400;
+      left: 0;
+      right: 0;
+      height: 10px;
+      z-index: 1;
+    }
+
+    .busy:before, .busy:after{
+      content: "";
+      position: fixed;
+      background: #ef3401;
+      left: 0;
+      right: 0;
+      height: 10px;
+      z-index: 1;
+    }
+
+    .offline:before, .offline:after{
+      content: "";
+      position: fixed;
+      background: #9e9e9e;
+      left: 0;
+      right: 0;
+      height: 10px;
+      z-index: 1;
+    }
+
+    body:after {
+      bottom: 0;
+    }
+
+    .wrapper{
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: none;
+    }
+
+    .wrapper-background{
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+   .wrapper-image{
+      height: 100%;
+      width: 100%;
+      display: block;
+      position: relative;
+
+      
+        background-image: url("/media/storage/ac/45829e503afb60c376912fdced8988b8947c5b.jpg?code=WzE1MjM5LCJhYy80NTgyOWU1MDNhZmI2MGMzNzY5MTJmZGNlZDg5ODhiODk0N2M1Yi5qcGciXQ:1fSKoL:LAwZvV00b6uD9mb5UgA-EZ_T16s");
+      
+
+      background-size: cover;
+      top: 10px;
+    }
+
+    .wrapper-color{
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      
+        background-color: #f7a900;
+      
+    }
+
+    .wrapper-gradient{
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#000000+0,000000+1,000000+100&0.6+0,0.5+0,0.3+100 */
+      background: -webkit-linear-gradient(left,  rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.5) 1%,rgba(0,0,0,0.3) 100%); /* Chrome10-25,Safari5.1-6 */
+    }
+
+    .header{
+      display: table;
+      table-layout: fixed;
+      height: 20%;
+      margin-left: 5%;
+      font-size: 5em;
+      font-weight: bold;
+      width: 93%
+    }
+
+    .title{
+      display: table-cell;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .content{
+      height: 80%;
+      display: none;
+      padding-bottom: 2%;
+      width: 70%;
+      float: left
+    }
+
+    .clock{
+      width: 30%;
+      height: 80%;
+      font-size: 4.5em;
+      float: right;
+    }
+
+    .clock-box{
+      height: 85%;
+      display: table;
+      table-layout: fixed;
+      margin-right: 10%;
+      width: 80%;
+    }
+
+    .clock-cell{
+      display: table-cell;
+      vertical-align: bottom;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meeting{
+      display: table;
+      table-layout: fixed;
+      height: 20%;
+      background-color: #000;
+      width: 70%;
+      margin-bottom: 1%;
+      padding-left: 10%;
+      margin-left: 10px;
+      text-shadow: none;
+    }
+
+    .info{
+      display: table-cell;
+      vertical-align: middle;
+    }
+
+    .time{
+      font-size: 2.5em;
+      margin-bottom: 1%;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 1%;
+    }
+
+    .meeting-name{
+      font-size: 2em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 1%;
+    }
+
+    .pm{
+      font-weight: normal;
+      font-size: 0.8em;
+      text-transform: lowercase;
+    }
+
+    .meeting-top-available{
+      background-color: #00d400;
+      height: 28%;
+      width: 90%;
+      color: #000;
+      font-size: 1.6em;
+      text-shadow: none;
+    }
+
+    .meeting-top-offline{
+      background-color: #9e9e9e;
+      height: 28%;
+      width: 90%;
+      color: #000;
+      font-size: 1.6em;
+      text-shadow: none;
+    }
+
+    .meeting-top-offline .time{
+      white-space: normal;
+    }
+
+    .meeting-top-busy{
+      background-color: #ef3401;
+      height: 28%;
+      width: 90%;
+      color: #000;
+      font-size: 1.6em;
+      text-shadow: none;
+    }
+
+    .current{
+      background-color: #ef3401;
+      color: #000;
+    }
+
+    /*
+    ==============================================
+    slideRight
+    ==============================================
+    */
+
+    .slideRight{
+      -webkit-animation-name: slideRight;
+      -webkit-animation-duration: 1s;
+      -webkit-animation-timing-function: ease-in-out;
+      visibility: visible !important;
+    }
+
+    @-webkit-keyframes slideRight {
+      0% {
+        -webkit-transform: translateX(-150%);
+      }
+      100% {
+        -webkit-transform: translateX(0%);
+      }
+    }
+
+    
+  </style>
+</head>
+
+<body class="neutral">
+  <img src="/media/storage/ac/45829e503afb60c376912fdced8988b8947c5b.jpg?code=WzE1MjM5LCJhYy80NTgyOWU1MDNhZmI2MGMzNzY5MTJmZGNlZDg5ODhiODk0N2M1Yi5qcGciXQ:1fSKoL:LAwZvV00b6uD9mb5UgA-EZ_T16s" style="display:none;">
+
+  
+
+  <div class="wrapper-background">
+    <div class="wrapper-image">
+      <div class="wrapper-color">
+        <div class="wrapper-gradient">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <div class="header">
+      <div class="title">Horarios</div>
+    </div>
+
+    <div class="content">
+    </div>
+
+    <div class="clock">
+      <div class="clock-box">
+         <span class="clock-cell"><span class="hour"></span><span class="blink">:</span><span class="min"></span><span class="am-pm"></span></span>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+<script type="text/javascript" charset="utf-8">
+  // shim for solving the bug that Android doesn't have the correct size when the load event is dispatched
+  // shim for solving the bug that Android doesn't have the correct size when the load event is dispatched
+(function() {
+  var prevWidth = null, prevHeight = null, timer = null, didShow = false;
+  function dispatch(name, width, height) {
+    var customEvent = document.createEvent('HTMLEvents');
+    customEvent.initEvent(name, true, false);
+    if (width !== undefined) customEvent.clientWidth = width;
+    if (height !== undefined) customEvent.clientHeight = height;
+    document.dispatchEvent(customEvent);
+  }
+  function conditionalDispatch() {
+    var width = window.innerWidth, height = window.innerHeight;
+    if (width !== prevWidth || height !== prevHeight) {
+      dispatch('measurechange', width, height);
+      prevWidth = width; prevHeight = height;
+    }
+  }
+  function debounceDispatch() {
+    if (timer) window.clearTimeout(timer);
+    timer = window.setTimeout(conditionalDispatch, 500);
+  }
+  function delayedDispatch() {
+    try {
+      !!signage.playAudio;
+      window.setTimeout(function() { if (!didShow) dispatch('show'); }, 5000);
+    } catch(e) {
+      if (!navigator.userAgent.match(/SmartHub; SMART-TV;|Web0S; Linux\/SmartTV|X11; CrOS|BrightSign|Tizen/)) {
+        window.setTimeout(function() { dispatch('show'); }, 1000);
+      }
+    }
+    window.setTimeout(conditionalDispatch, 0);
+    window.setTimeout(conditionalDispatch, 250);
+    window.setTimeout(conditionalDispatch, 1000);
+    window.setTimeout(conditionalDispatch, 3000);
+  }
+  window.addEventListener('message', function(event) {
+    if (event.data.event) return document.dispatchEvent(new Event(event.data.event));
+    if (event.data.signage && !window.signage) {
+      window.signage = {};
+      for (var key in event.data.signage) {
+        window.signage[key] = function(value) {
+          return value;
+        }.bind(null, event.data.signage[key]);
+      }
+    }
+  }, false);
+  document.addEventListener('show', function() { didShow = true; }, false);
+  window.addEventListener('DOMContentLoaded', conditionalDispatch, false);
+  window.addEventListener('load', delayedDispatch, false);
+  window.addEventListener('resize', debounceDispatch, false);
+})();
+
+</script>
+
+<script type="text/javascript" src="/media/storage/be/97de5c9d3a1dfdc3c1fd181d53f2fbd8d6d021.js?code=WzE1MjM5LCJiZS85N2RlNWM5ZDNhMWRmZGMzYzFmZDE4MWQ1M2YyZmJkOGQ2ZDAyMS5qcyJd:1fSKoL:9mjg0Sz4HX1izo2M_uzsiMtW9QA"></script>
+
+<script>
+  $=function(s){return document.querySelector(s)};
+    tim=function(){var e=/\[\[\s*([a-z0-9_][\\.a-z0-9_]*)\s*\]\]/gi;return function(f,g){return f.replace(e,function(h,i){for(var c=i.split('.'),d=c.length,b=g,a=0;a<d;a++){b=b[c[a]];if(b===void 0)throw'not found';if(a===d-1)return b}})}}();
+
+  var failed = {};
+  failed.stop = false;
+  failed.dontChange = false;
+  //Know if the request failed in the first time
+  var counter = 0;
+
+  function resizeText() {
+    var w = window,
+    body = document.getElementsByTagName('body')[0];
+    windowsHeight = w.innerHeight;
+    windowsWidth = w.innerWidth;
+
+    heightRatio = 0.02;
+    widthRatio = 0.013;
+    maxFontSize = 50;
+
+    minHeight = (windowsHeight * heightRatio < 75)? windowsHeight * heightRatio : maxFontSize;
+    minWidth = (windowsWidth * widthRatio < 75)? windowsWidth * widthRatio : maxFontSize;
+    minSize = (minHeight < minWidth)? minHeight : minWidth;
+
+    var fontRatio = 35;
+    if (windowsHeight > windowsWidth) {
+      // Defini um ratio para o tamanho da tela portrait
+      var resultSize = (windowsHeight + windowsWidth*4)/5;
+    } else {
+      // Defini um ratio para o tamanho da tela landscape
+      var resultSize = (windowsHeight*4 + windowsWidth)/5;
+    }
+
+    fontRatio = Math.pow(2.2, (resultSize * 0.5)); // 2.2 ˆ resultSize * 0.5
+
+    body.style.fontSize = (fontRatio < minSize)?  fontRatio.toFixed(2) + 'px' : minSize.toFixed(2) + 'px';
+    return true;
+  }
+
+  var allEvents = {};
+
+  window.addEventListener('load', function (event) {
+    //todo local storage
+    try {
+      allEvents = JSON.parse(localStorage.getItem('calendar-https://calendar.google.com/calendar/ical/amandasanchissoler93%40gmail.com/private-99b8ee5fecf92a7028c03d56fb15ed85/basic.ics'));
+      allEvents = convertDateObjects(allEvents);
+
+      if (allEvents) {
+        updateCalendar();
+      } else {
+        allEvents = {};
+      }
+    } catch(err) {
+    }
+    updateCalendarData();
+  });
+
+  function convertDateObjects(allEvents){
+    for (var k in allEvents) {
+      for (var j in allEvents[k]) {
+        allEvents[k][j].start = allEvents[k][j].start.split("(");
+        allEvents[k][j].start = new Date(allEvents[k][j].start[0]);
+        allEvents[k][j].end = allEvents[k][j].end.split("(");
+        allEvents[k][j].end = new Date(allEvents[k][j].end[0]);
+      }
+    }
+    return allEvents;
+  }
+
+  function parseIcalData(data){
+    iCalendarData = data;
+    var jcalData = ICAL.parse(iCalendarData);
+    var vcalendar = new ICAL.Component(jcalData);
+    var vevent = vcalendar.getAllSubcomponents('vevent');
+    var events = [];
+
+    for (var x in vevent) {
+      var eventICAL = new ICAL.Event(vevent[x]);
+      var event = {
+        "start": new Date(eventICAL.startDate.toJSDate()),
+        "end": new Date(eventICAL.endDate.toJSDate()),
+        "summary":eventICAL.summary,
+      }
+
+      var datesDifference = event.end.getTime() - event.start.getTime();
+      events.push(event);
+
+      if (eventICAL.isRecurring()) {
+        var now = new Date();
+        var count = 0;
+        var expand = eventICAL.iterator(eventICAL.startDate);
+
+        for (var next = expand.next(); next; next = expand.next()) {
+          if ((new Date(next.toJSDate())) >= now
+            && (new Date(next.toJSDate())).getTime() != event.start.getTime()) {
+
+            var end =  new Date(next.toJSDate());
+            end = new Date(end.getTime() + datesDifference);
+            var ev = {
+                "start": new Date(next.toJSDate()),
+                "end": end,
+                "summary":eventICAL.summary
+            }
+            count++;
+            events.push(ev);
+
+            if (count == 3) {
+                break;
+            }
+        }
+      }
+    }
+  }
+    return events;
+  }
+
+  function updateCalendarData(){
+    var request = new XMLHttpRequest();
+    request.open('GET', "https://calendar.google.com/calendar/ical/amandasanchissoler93%40gmail.com/private-99b8ee5fecf92a7028c03d56fb15ed85/basic.ics" , true);
+    request.timeout = 5000;
+
+    request.onload = function() {
+      var lang = 'es';
+      if (request.status >= 200 && request.status < 400) {  // Success!
+        if (request.responseText.search("BEGIN:VCALENDAR") > -1) {
+          var data = parseIcalData(request.responseText);
+          var now = new Date();
+          var tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          var afterTomorrow = new Date();
+          afterTomorrow.setDate(afterTomorrow.getDate() + 2);
+
+          allEvents[now.toDateString()] = [];
+          allEvents[tomorrow.toDateString()] = [];
+          allEvents[afterTomorrow.toDateString()] = [];
+
+          var currentEvent;
+          for (var k in data) {
+            if (data.hasOwnProperty(k)) {
+              var ev = data[k];
+              if (!ev.start) continue;
+
+              if (ev.start.toDateString() == now.toDateString()){
+                if (ev.end.toDateString() != now.toDateString()) { //It starts today but ends in a different day
+                  ev.multipleDays = true;
+                }
+                allEvents[now.toDateString()].push(ev);
+              } else if (ev.start.toDateString() == tomorrow.toDateString()
+                || ev.start.toDateString() == afterTomorrow.toDateString()) {
+                allEvents[ev.start.toDateString()].push(ev);
+              } else if (ev.start.getTime() < now.getTime() && (ev.end.getTime() > now.getTime())) {
+                ev.multipleDays = true;
+                allEvents[now.toDateString()].push(ev);
+              }
+            }
+          }
+
+          failed.stop = false;
+          counter++;
+
+          try {
+            localStorage.setItem('calendar-https://calendar.google.com/calendar/ical/amandasanchissoler93%40gmail.com/private-99b8ee5fecf92a7028c03d56fb15ed85/basic.ics', JSON.stringify(allEvents));
+            localStorage.setItem('last-update-https://calendar.google.com/calendar/ical/amandasanchissoler93%40gmail.com/private-99b8ee5fecf92a7028c03d56fb15ed85/basic.ics', JSON.stringify(new Date()));
+          } catch(err) {
+            console.log(err);
+          }
+
+
+          updateCalendar();
+        } else {
+          failed.stop = true;
+          var renderedString = "<div class='meeting meeting-top-offline'><div class='info'><div class='time'>";
+          var renderedString = "<div class='meeting meeting-top-offline'><div class='info'><div class='time'>";
+
+          if (lang == 'en') {
+            var renderedString = "Invalid link. Not an iCal file.</div></div></div>";
+          } else if (lang == 'pt-br') {
+            var renderedString = "Link inválido. Não é um arquivo iCal.</div></div></div>";
+          } else {
+            var renderedString = "Enlace inválido. No es un archivo iCal.</div></div></div>";
+          }
+
+          $("body").style.borderLeft = "10px solid #9e9e9e";
+          $("body").style.borderRight = "10px solid #9e9e9e";
+          $("body").className = "offline";
+          $(".content").innerHTML = renderedString;
+          clearInterval(stopEverythingOffline);
+          clearInterval(refreshIntervalId);
+          setInterval(function(){ updateTime(); }, 1000);
+
+          //trun light on
+          if (typeof signage !== 'undefined') {
+            if (typeof signage.ledOn !== 'undefined') {
+              signage.ledOn(158,158,158);
+            }
+          }
+        }
+      } else {  // Error !
+        if (request.status == 404) {
+          console.log("404");
+          failed.stop = true;
+          failed.dontChange = true;
+          var renderedString = "<div class='meeting meeting-top-offline'><div class='info'><div class='time'>";
+          if (lang == 'en') {
+            var renderedString = "Invalid link. Not an iCal file.</div></div></div>";
+          } else if (lang == 'pt-br') {
+            var renderedString = "Link inválido. Não é um arquivo iCal.</div></div></div>";
+          } else {
+            var renderedString = "Enlace inválido. No es un archivo iCal.</div></div></div>";
+          }
+
+          $("body").style.borderLeft = "10px solid #9e9e9e";
+          $("body").style.borderRight = "10px solid #9e9e9e";
+          $("body").className = "offline";
+          $(".content").innerHTML = renderedString;
+          clearInterval(stopEverythingOffline);
+          clearInterval(refreshIntervalId);
+          setInterval(function(){ updateTime(); }, 1000);
+          //trun light on
+          if (typeof signage !== 'undefined') {
+            if (typeof signage.ledOn !== 'undefined') {
+              signage.ledOn(158,158,158);
+            }
+          }
+        } else {
+          console.log('Connection to webservice failed.');
+          if (counter == 0) {
+            //failed in the first request
+            //check if there is info in the local storage
+            try {
+              allEvents = JSON.parse(localStorage.getItem('calendar-https://calendar.google.com/calendar/ical/amandasanchissoler93%40gmail.com/private-99b8ee5fecf92a7028c03d56fb15ed85/basic.ics'));
+              if (!allEvents) {
+                failed.stop = true;
+              }
+            } catch(err) {
+              //nothing
+            }
+          }
+        }
+      }
+    };
+
+    request.onerror = function(error) {
+      console.log("onerror " + error );
+      //checking cross domain problem in preview
+      var url = window.location.href
+      var found = url.search("https");
+
+      if (found != -1) {
+        //cross domain problem in preview
+        //put in mock data
+        clearInterval(makeRequestData);
+        createMockData();
+      }
+
+      if (counter == 0) {
+        //failed in the first request
+        //check if there is info in the local storage
+        try {
+          allEvents = JSON.parse(localStorage.getItem('calendar-https://calendar.google.com/calendar/ical/amandasanchissoler93%40gmail.com/private-99b8ee5fecf92a7028c03d56fb15ed85/basic.ics'));
+          if (!allEvents) {
+            failed.stop = true;
+          }
+        } catch(err) {
+          //nothing
+        }
+      }
+    };
+
+  request.ontimeout = function (e) {
+    console.log("timeout");
+    console.log(e);
+  };
+
+    request.send();
+  }
+
+  function createMockData(){
+    var lang = 'es';
+    var now = new Date();
+    allEvents[now.toDateString()] = [];
+    var title;
+    if (lang == 'en') {
+      title = "Meeting title";
+    } else if (lang == 'pt-br') {
+      title = "Título da reunião";
+    } else {
+      title = "Título del evento";
+    }
+
+    var sampleTitle;
+    if (lang == 'en') {
+      sampleTitle = "Sample info";
+    } else if (lang == 'pt-br') {
+      sampleTitle = "Exemplo";
+    } else {
+      sampleTitle = "Muestra";
+    }
+
+    allEvents[now.toDateString()][0] = {
+      "start": new Date(now.getTime() + 60000),
+      "end": new Date(now.getTime() + 60*60000),
+      "summary": title
+    };
+
+    allEvents[now.toDateString()][1] = {
+      "start": new Date(now.getTime() + 60*60000),
+      "end": new Date(now.getTime() + 120*60000),
+      "summary": title
+    };
+
+    allEvents[now.toDateString()][2] = {
+      "start": new Date(now.getTime() + 120*60000),
+      "end": new Date(now.getTime() + 180*60000),
+      "summary": title
+    };
+
+    allEvents[now.toDateString()][3] = {
+      "start": new Date(now.getTime() + 180*60000),
+      "end": new Date(now.getTime() + 240*60000),
+      "summary": title
+    };
+
+    $(".title").innerHTML += " - " + sampleTitle;
+  }
+
+  var stopEverythingOffline = setInterval(function(){
+    try {
+      var lastUpdate = JSON.parse(localStorage.getItem('last-update-https://calendar.google.com/calendar/ical/amandasanchissoler93%40gmail.com/private-99b8ee5fecf92a7028c03d56fb15ed85/basic.ics'));
+      //converting to date object - needed because JSON does not support date type and returns a string
+      lastUpdate = lastUpdate.split("(");
+      lastUpdate = new Date(lastUpdate[0]);
+      var now = new Date();
+      var hourTimeout = new Date(lastUpdate.getTime() + 1000 *60000);
+
+      //check dates difference to see if it is bigger than the offline time allowed
+      if (now.getTime() >= hourTimeout.getTime()) {
+        failed.stop = true;
+      } else {
+        //do nothing
+      }
+    } catch(err) {
+    }
+  }, 1000);
+
+  function updateCalendar(){
+    if (!failed.stop) { //stops updating the calendar if it has reached the offline time allowed
+      var currentEvent;
+      var OneOrMoreDaysEvent;
+      var events = [];
+      var now = new Date();
+      var todayData = allEvents[now.toDateString()];
+
+      if (todayData) {
+        todayData.sort(function(a, b) {
+            return a.start.getTime() - b.start.getTime();
+        });
+      }
+
+      for (var k in todayData) {
+        var ev = todayData[k];
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        if (ev.start.getTime() > now.getTime()) {
+          //event that has not started yet
+          if (events.length < 3) {
+            events.push(ev);
+          }
+        } else if (ev.start.getTime() == now.getTime()) {
+          if (ev.start.getHours() == 0 && ev.end.getHours() == 0  && (ev.end.toDateString() == tomorrow.toDateString())) {
+            //all day event
+            ev.multipleDays = false;
+            OneOrMoreDaysEvent = ev;
+          } else {
+            if (ev.multipleDays) {
+              OneOrMoreDaysEvent = ev;
+            } else {
+            currentEvent = ev;
+            }
+          }
+        } else if (ev.end.getTime() > now.getTime()) {
+          if (ev.start.getHours() == 0 && ev.end.getHours() == 0 && (ev.end.toDateString() == tomorrow.toDateString())) {
+            ev.multipleDays = false;
+            OneOrMoreDaysEvent = ev;
+          } else {
+            if (ev.multipleDays) {
+              OneOrMoreDaysEvent = ev;
+            } else {
+              currentEvent = ev;
+            }
+          }
+        }
+      }
+      buildSchedule(events, currentEvent, OneOrMoreDaysEvent);
+    } else {
+      if (!failed.dontChange) {
+        var renderedString = "<div class='meeting meeting-top-offline'><div class='info'><div class='time'>Horarios no disponibles</div></div></div>";
+        $("body").style.borderLeft = "10px solid #9e9e9e";
+        $("body").style.borderRight = "10px solid #9e9e9e";
+        $("body").className = "offline";
+        $(".content").innerHTML = renderedString;
+        //trun light on
+        if (typeof signage !== 'undefined') {
+          if (typeof signage.ledOn !== 'undefined') {
+            signage.ledOn(158,158,158);
+          }
+        }
+      }
+    }
+  }
+
+  function updateTime() {
+    var date = new Date(),
+    h = date.getHours(),
+    m = date.getMinutes(),
+    s = date.getSeconds();
+
+    
+    
+      $('.hour').innerHTML = (h <= 9) ? '0' + h : h;
+      $('.min').innerHTML = (m <= 9) ? '0' + m : m;
+  }
+
+  var makeRequestData = setInterval(updateCalendarData, 5 > 0 ? 5 * 60000 : 60000);
+  var refreshIntervalId = setInterval(function(){ updateTime(); if(allEvents){updateCalendar(allEvents);} }, 1000);
+
+  function buildSchedule(events, currentEvent, OneOrMoreDaysEvent){
+    var lang = 'es';
+    var renderedString = '';
+
+    if (OneOrMoreDaysEvent) { //This calendar has one event that lasts one day or one event that lasts more than one day ocurring right now
+      renderedString += "<div class='meeting meeting-top-busy'><div class='info'>"
+      renderedString += "<div class='time'>"+ OneOrMoreDaysEvent.summary +"</div>";
+
+      if (OneOrMoreDaysEvent.multipleDays) { //IT is a MULTIPLE DAY event
+        if (lang == 'en') {
+          renderedString += "<div class='meeting-name'>Busy until " + formatDate(OneOrMoreDaysEvent) + " - "
+          + formatTime(OneOrMoreDaysEvent.end) + "</div>";
+        } else if(lang == 'es') {
+          renderedString += "<div class='meeting-name'>Ocupado hasta " + formatDate(OneOrMoreDaysEvent) + " - "
+          + formatTime(OneOrMoreDaysEvent.end) + "</div>";
+        } else {
+          renderedString += "<div class='meeting-name'>Ocupado até " + formatDate(OneOrMoreDaysEvent) + " - "
+          + formatTime(OneOrMoreDaysEvent.end) + "</div>";
+        }
+      } else { //It is an ALL DAY event
+        if (lang == 'en') {
+          renderedString += "<div class='meeting-name'>Busy - all day</div>";
+        } else if (lang == 'pt-br') {
+          renderedString += "<div class='meeting-name'>Ocupado - o dia todo</div>";
+        } else {
+          renderedString += "<div class='meeting-name'>Ocupado - todo el día</div>";
+        }
+     }
+      renderedString += "</div></div>";
+      $("body").style.borderLeft = "10px solid #ef3401";
+      $("body").style.borderRight = "10px solid #ef3401";
+      $("body").className = "busy";
+
+      //turn on light
+      if (typeof signage !== 'undefined') {
+        if (typeof signage.ledOn !== 'undefined') {
+          console.log('CALENDAR LED: signage.ledOn(255,0,0)');
+          signage.ledOn(255,0,0);
+        } else {
+          console.log('CALENDAR LED: signage.ledOn() method is not available.');
+        }
+      } else {
+        console.log('CALENDAR LED: signage object is not available.');
+      }
+
+      if (currentEvent) { //Sub event, that is also happening right now
+        if (currentEvent.multipleDays) {
+          formatMultipleDayEvent(currentEvent);
+        } else {
+          renderedString += "<div class='meeting current'><div class='info'>";
+          renderedString += "<div class='time'>" + formatTime(currentEvent.start) +" - " + formatTime(currentEvent.end) + "</div>";
+          renderedString += "<div class='meeting-name'>"+ currentEvent.summary +"</div>";
+          renderedString += "</div></div>";
+        }
+
+        for (var i in events) {
+          if (i < 2) { //Only shows two of the following events (to fit on the screen)
+            var ev = events[i];
+            renderedString += "<div class='meeting'><div class='info'>";
+
+            if (ev.multipleDays) { //event that lasts more than one day
+              renderedString += "<div class='time'>" + formatTime(ev.start) + " - " + formatDate(ev) + " " + formatTime(ev.end) + "</div>";
+            } else {
+              renderedString += "<div class='time'>" + formatTime(ev.start) +" - " + formatTime(ev.end) + "</div>";
+            }
+            renderedString += "<div class='meeting-name'>"+ ev.summary +"</div>";
+            renderedString += "</div></div>";
+          }
+        }
+      } else {
+        renderedString += iterateFutureEvents(events);
+      }
+    } else { //This calendar does not have events that lasts all day or multiple days ocurring right now
+      if (currentEvent) { //There is an event happening right now
+        renderedString += "<div class='meeting meeting-top-busy'><div class='info'>"
+        renderedString += "<div class='time'>"+ currentEvent.summary +"</div>";
+        renderedString += "<div class='meeting-name'>";
+
+        if (currentEvent.multipleDays) { //This event lasts more than one day
+          formatMultipleDayEvent(currentEvent);
+        } else { //Its a regular event
+          if (lang == 'en') {
+            renderedString += "Busy " + formatTime(currentEvent.start) +" - " + formatTime(currentEvent.end) + "</div>";
+          } else {
+            renderedString += "Ocupado " + formatTime(currentEvent.start) +" - " + formatTime(currentEvent.end) + "</div>";
+          }
+        }
+
+        renderedString += "</div></div>";
+        $("body").style.borderLeft = "10px solid #ef3401";
+        $("body").style.borderRight = "10px solid #ef3401";
+        $("body").className = "busy";
+        //turn on light
+        if (typeof signage !== 'undefined') {
+          if (typeof signage.ledOn !== 'undefined') {
+            console.log('CALENDAR LED: signage.ledOn(255,0,0)');
+            signage.ledOn(255,0,0);
+          } else {
+            console.log('CALENDAR LED: signage.ledOn() method is not available.');
+          }
+        } else {
+          console.log('CALENDAR LED: signage object is not available.');
+        }
+
+      } else { //Meeting room is free
+        renderedString += "<div class='meeting meeting-top-available'><div class='info'><div class='time'>";
+
+        if(lang == 'en') {
+          renderedString += "Room Available</div></div></div>";
+        } else if (lang == 'pt-br') {
+          renderedString += "Sala disponível</div></div></div>";
+        } else {
+          renderedString += "Sala disponible</div></div></div>";
+        }
+
+        $("body").style.borderLeft = "10px solid #00d400";
+        $("body").style.borderRight = "10px solid #00d400";
+        $("body").className = "free";
+        //turn on light
+        if (typeof signage !== 'undefined') {
+          if (typeof signage.ledOn !== 'undefined') {
+            console.log('CALENDAR LED: signage.ledOn(0,212,0)');
+            signage.ledOn(0,212,0);
+          } else {
+            console.log('CALENDAR LED: signage.ledOn() method is not available.');
+          }
+        } else {
+          console.log('CALENDAR LED: signage object is not available.');
+        }
+      }
+
+      renderedString += iterateFutureEvents(events);
+    }
+    $(".content").innerHTML = renderedString;
+  }
+
+  function formatDate(event) {
+    var string;
+    var month = (event.end.getMonth() + 1);
+    if (month < 10) {
+      month = "0" + month;
+    }
+
+    var date = event.end.getDate();
+    if (date < 10) {
+      date = "0" + date;
+    }
+
+    
+      string = date + "/" + month;
+    
+    return string;
+  }
+
+  function formatMultipleDayEvent(event) {
+    var renderedString = "";
+    if (lang == 'en') {
+      renderedString += "Busy until " + formatDate(event) + " - " + formatTime(event.end) + "</div>";
+    } else if(lang == 'es') {
+      renderedString += "Ocupado hasta " + formatDate(event) + " - " + formatTime(event.end) + "</div>";
+    } else {
+      renderedString += "Ocupado até " + formatDate(event) + " - " + formatTime(event.end) + "</div>";
+    }
+    return renderedString;
+  }
+
+  function iterateFutureEvents(events) {
+    var renderedString = '';
+    for (var i in events) {
+      var ev = events[i];
+      renderedString += "<div class='meeting'><div class='info'>";
+
+      if (ev.multipleDays) { //event that lasts more than one day
+          renderedString += "<div class='time'>" + formatTime(ev.start) + " - " + formatDate(ev) + " " + formatTime(ev.end) + "</div>";
+      } else {
+        renderedString += "<div class='time'>" + formatTime(ev.start) +" - " + formatTime(ev.end) + "</div>";
+      }
+      renderedString += "<div class='meeting-name'>"+ ev.summary +"</div>";
+      renderedString += "</div></div>";
+    }
+    return renderedString;
+  }
+
+  function formatTime(time){
+    h = time.getHours(),
+    m = time.getMinutes(),
+    s = time.getSeconds();
+
+    var hour;
+    var ampm;
+
+    
+
+    h = (h <= 9) ? '0' + h : h;
+    m = (m <= 9) ? '0' + m : m;
+
+    hour = h + ':' + m;
+
+    if (ampm) {
+      hour += '<span class="pm">'+ ampm +'</span>';
+    }
+
+    return hour;
+  }
+
+  // preload images
+  var img = new Image();
+  img.src = "/media/storage/ac/45829e503afb60c376912fdced8988b8947c5b.jpg?code=WzE1MjM5LCJhYy80NTgyOWU1MDNhZmI2MGMzNzY5MTJmZGNlZDg5ODhiODk0N2M1Yi5qcGciXQ:1fSKoL:LAwZvV00b6uD9mb5UgA-EZ_T16s";
+
+  document.addEventListener('show', function(event) {
+    $(".wrapper").style.display = "block";
+
+    
+    $(".content").style.display = "table";
+    $(".content").className += " slideRight";
+    
+
+    
+  });
+
+  window.addEventListener('measurechange', function onResize() {
+    var done = resizeText();
+  });
+</script>
+
+</html>
