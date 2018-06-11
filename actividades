@@ -325,13 +325,6 @@
     <div class="content">
     </div>
 
-    <div class="clock">
-      <div class="clock-box">
-         <span class="clock-cell"><span class="hour"></span><span class="blink">:</span><span class="min"></span><span class="am-pm"></span></span>
-      </div>
-    </div>
-  </div>
-
 </body>
 
 <script type="text/javascript" charset="utf-8">
